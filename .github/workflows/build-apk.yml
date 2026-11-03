@@ -21,6 +21,13 @@ jobs:
           python-version: '3.12'
       - name: تسطيب المكتبات
         run: npm install --no-audit --no-fund
+      - name: مفتاح التوقيع (من Secrets)
+        env:
+          KS: ${{ secrets.HAFIZ_KEYSTORE }}
+        run: |
+          if [ -z "$KS" ]; then echo "::error::الـ Secret اللي اسمه HAFIZ_KEYSTORE مش موجود"; exit 1; fi
+          echo "$KS" | tr -d ' \r\n' | base64 -d > resources/hafiz.keystore
+          keytool -list -v -keystore resources/hafiz.keystore -storepass hafizapp | grep -m1 "SHA256:"
       - name: تجهيز مشروع أندرويد
         run: |
           pip install pillow
