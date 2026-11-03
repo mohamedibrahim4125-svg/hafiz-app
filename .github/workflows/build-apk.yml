@@ -8,16 +8,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
-      - uses: android-actions/setup-android@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: تسطيب المكتبات
@@ -30,6 +29,8 @@ jobs:
           npx cap sync android
       - name: بناء APK
         run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
