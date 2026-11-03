@@ -1,0 +1,22 @@
+{
+  "name": "hafiz-quran",
+  "version": "1.0.0",
+  "private": true,
+  "description": "حافظ — برنامج تحفيظ القرآن الكريم",
+  "scripts": {
+    "android:setup": "npx cap add android && node scripts/patch-android.js && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor-community/speech-recognition": "7.0.1",
+    "@capacitor/android": "7.6.10",
+    "@capacitor/app": "7.1.2",
+    "@capacitor/browser": "7.0.5",
+    "@capacitor/core": "7.6.10",
+    "@capacitor/filesystem": "7.1.9",
+    "@capacitor/share": "7.0.4",
+    "@capacitor/status-bar": "7.0.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.6.10"
+  }
+}

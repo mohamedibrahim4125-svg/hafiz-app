@@ -1,0 +1,12 @@
+{
+  "appId": "com.hafiz.quran",
+  "appName": "حافظ",
+  "webDir": "www",
+  "android": {
+    "adjustMarginsForEdgeToEdge": "force",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 800, "backgroundColor": "#0f5c45" }
+  }
+}
