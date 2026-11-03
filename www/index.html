@@ -464,6 +464,30 @@ async function exportBackup(){const data=JSON.stringify(st),name="hafiz-backup-"
       await CP.Share.share({title:"نسخة احتياطية — حافظ",text:"نسخة احتياطية من تقدّمك في برنامج حافظ",url:r.uri,dialogTitle:"احفظ النسخة الاحتياطية"});return}catch(e){if(!/cancel/i.test(String(e&&e.message)))toast("تعذّر حفظ النسخة")}return}
   const b=new Blob([data],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove()}
 
+/* ---------- التحديثات ---------- */
+const APP_VERSION=parseInt("__APP_BUILD__",10)||0;
+const UPD_REPO="mohamedibrahim4125-svg/hafiz-app";
+async function checkUpdate(manual){
+  if(!NATIVE&&!manual)return;
+  if(!manual&&st.updAt&&Date.now()-st.updAt<6*3600e3)return;
+  try{const r=await fetch(`https://api.github.com/repos/${UPD_REPO}/releases/latest`,{cache:"no-store",headers:{Accept:"application/vnd.github+json"}});
+    if(!r.ok)throw new Error(r.status);const d=await r.json();st.updAt=Date.now();save();
+    const n=parseInt(String(d.tag_name||"").split(".").pop(),10)||0,apk=(d.assets||[]).find(a=>/\.apk$/i.test(a.name));
+    if(apk&&n>APP_VERSION){if(!manual&&st.updLater&&st.updLater.n===n&&Date.now()-st.updLater.t<12*3600e3)return;showUpdate(n,d.body||"",apk.browser_download_url,(apk.size/1048576).toFixed(1))}
+    else if(manual)toast(APP_VERSION?"✔️ عندك آخر نسخة ("+AR(APP_VERSION)+")":"✔️ مفيش تحديثات")}
+  catch(e){if(manual)toast("تعذّر التحقق من التحديثات — تأكد من النت")}}
+function showUpdate(n,body,url,mb){
+  const notes=body.split("\n").filter(l=>l.trim()&&!/^(Co-Authored-By|Claude-Session)/i.test(l)).slice(0,8).map(esc).join("<br>");
+  const show=()=>{sfx("lvl");modal(`<div class="cele"><div class="e">🎉</div><h2>نسخة جديدة من «حافظ»</h2>
+    <p class="muted" style="margin:0">النسخة ${AR(n)}${APP_VERSION?` — انت معاك النسخة ${AR(APP_VERSION)}`:""} · ${AR(mb)} ميجا</p>
+    ${notes?`<div class="card" style="text-align:start;margin:12px 0;background:var(--bg)"><b>الجديد:</b><div style="margin-top:4px">${notes}</div></div>`:""}
+    <p class="muted" style="font-size:13.5px">بعد التنزيل افتح الملف واضغط «تثبيت» — تقدّمك وحفظك مش هيتمسحوا.</p>
+    <div class="row" style="justify-content:center"><button class="btn" id="updL">بعدين</button><button class="btn pri" id="updG">⬇️ نزّل التحديث</button></div></div>`);
+    $("#updG").onclick=()=>{closeModal();if(NATIVE&&CP.Browser)CP.Browser.open({url}).catch(()=>{location.href=url});else location.href=url};
+    $("#updL").onclick=()=>{st.updLater={n,t:Date.now()};save();closeModal()}};
+  if($("#ovl").classList.contains("open"))setTimeout(()=>showUpdate(n,body,url,mb),4000);else show()}
+if(NATIVE){setTimeout(()=>checkUpdate(false),2500);if(CP.App)CP.App.addListener("appStateChange",s=>{if(s.isActive)checkUpdate(false)})}
+
 /* ---------- router ---------- */
 const views={home,mushaf,surahs,hifz,review,test,tajweed,method};
 let sess=null;
@@ -571,7 +595,8 @@ function home(){
     <button class="btn sm" id="exp">⬇️ نسخة احتياطية</button>
     <button class="btn sm" id="imp">⬆️ استرجاع</button>
     ${st.name?`<button class="btn sm ghost" id="rename">✏️ تغيير الاسم</button>`:""}
-  </div>`;
+  </div>
+  ${NATIVE?`<div class="card row" style="margin-top:10px"><span class="muted sp" style="font-size:14px">إصدار التطبيق: <b>${APP_VERSION?AR(APP_VERSION):"—"}</b></span><button class="btn sm" id="updC">🔄 تحقق من التحديثات</button></div>`:""}`;
   if(p)$("#goNew").onclick=()=>openSess(p.s,p.from,p.to,"new");
   document.querySelectorAll("[data-task]").forEach(b=>b.onclick=()=>{const g=b.dataset.task;if(g==="new"&&p)openSess(p.s,p.from,p.to,"new");else go(g==="new"?"hifz":g)});
   if(!st.name){const ok=()=>{const v=$("#nm").value.trim();if(v){st.name=v.slice(0,30);save();sfx("ok");home()}};$("#nmok").onclick=ok;$("#nm").onkeydown=e=>{if(e.key==="Enter")ok()}}
@@ -580,6 +605,7 @@ function home(){
   $("#order").onchange=e=>{st.order=e.target.value;save();home()};
   $("#exp").onclick=exportBackup;
   $("#imp").onclick=()=>$("#importFile").click();
+  if($("#updC"))$("#updC").onclick=()=>checkUpdate(true);
 }
 $("#importFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.mem)throw 0;st=Object.assign(defaults(),o);save();toast("تم استرجاع بياناتك ✔️");route()}catch(x){toast("الملف غير صالح")}};r.readAsText(f);e.target.value=""};

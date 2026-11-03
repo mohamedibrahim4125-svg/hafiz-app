@@ -24,6 +24,8 @@ jobs:
       - name: تجهيز مشروع أندرويد
         run: |
           pip install pillow
+          sed -i "s/__APP_BUILD__/${GITHUB_RUN_NUMBER}/" www/index.html
+          grep -c "parseInt(\"${GITHUB_RUN_NUMBER}\"" www/index.html
           if [ ! -d android ]; then npx cap add android; fi
           node scripts/patch-android.js
           npx cap sync android
@@ -45,3 +47,5 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: حافظ — نسخة ${{ github.run_number }}
           files: hafiz.apk
+          make_latest: true
+          body: ${{ github.event.head_commit.message }}
